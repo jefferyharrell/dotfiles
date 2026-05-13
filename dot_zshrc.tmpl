@@ -2,6 +2,14 @@
 # Source: ~/.local/share/chezmoi/dot_zshrc.tmpl
 # Per-machine overrides live in ~/.zshrc.local (not managed by chezmoi).
 
+# ── PATH ───────────────────────────────────────────────────────────────────
+# Prepend ~/.local/bin so user-installed tools take precedence and are visible
+# to `command -v` checks below. Same path on macOS and Linux.
+case ":$PATH:" in
+  *":$HOME/.local/bin:"*) ;;
+  *) export PATH="$HOME/.local/bin:$PATH" ;;
+esac
+
 # ── Plugins ────────────────────────────────────────────────────────────────
 {{ if eq .chezmoi.os "darwin" -}}
 [ -r "$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ] && \
