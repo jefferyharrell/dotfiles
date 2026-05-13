@@ -1,0 +1,99 @@
+# ~/.zshrc — managed by chezmoi
+# Source: ~/.local/share/chezmoi/dot_zshrc.tmpl
+# Per-machine overrides live in ~/.zshrc.local (not managed by chezmoi).
+
+# ── Plugins ────────────────────────────────────────────────────────────────
+{{ if eq .chezmoi.os "darwin" -}}
+[ -r "$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ] && \
+  source "$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+{{- else if eq .chezmoi.os "linux" -}}
+for _f in \
+  /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh \
+  /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh; do
+  [ -r "$_f" ] && source "$_f" && break
+done
+unset _f
+{{- end }}
+
+# ── Modern Unix tool aliases ───────────────────────────────────────────────
+# Each guarded so missing tools don't break the shell.
+
+if command -v eza >/dev/null 2>&1; then
+  alias ls='eza --group-directories-first'
+  alias ll='eza -l --group-directories-first --git'
+  alias la='eza -la --group-directories-first --git'
+  alias lt='eza --tree --level=2 --group-directories-first'
+fi
+
+# bat is `batcat` on Debian/Ubuntu; restore the expected name.
+if command -v bat >/dev/null 2>&1; then
+  alias cat='bat --paging=never'
+elif command -v batcat >/dev/null 2>&1; then
+  alias bat='batcat'
+  alias cat='batcat --paging=never'
+fi
+
+# fd is `fdfind` on Debian/Ubuntu; restore the expected name.
+if ! command -v fd >/dev/null 2>&1 && command -v fdfind >/dev/null 2>&1; then
+  alias fd='fdfind'
+fi
+
+# zoxide: `z <partial-name>` jumps to recently-used dirs. Augments cd, doesn't replace it.
+command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init zsh)"
+
+# fzf: Ctrl-R fuzzy history, Ctrl-T fuzzy file picker.
+{{ if eq .chezmoi.os "darwin" -}}
+if command -v fzf >/dev/null 2>&1 && [ -f "$(brew --prefix)/opt/fzf/shell/key-bindings.zsh" ]; then
+  source "$(brew --prefix)/opt/fzf/shell/key-bindings.zsh"
+  source "$(brew --prefix)/opt/fzf/shell/completion.zsh"
+fi
+{{- else if eq .chezmoi.os "linux" -}}
+if command -v fzf >/dev/null 2>&1; then
+  for _d in /usr/share/fzf /usr/share/doc/fzf/examples; do
+    [ -r "$_d/key-bindings.zsh" ] && source "$_d/key-bindings.zsh"
+    [ -r "$_d/completion.zsh" ]   && source "$_d/completion.zsh"
+  done
+  unset _d
+fi
+{{- end }}
+
+# ── SSH directory passthrough ──────────────────────────────────────────────
+# Keep LC_REMOTE_PWD in sync with $PWD so any outbound ssh forwards it via the
+# standard SendEnv LC_* rule. The remote's ~/.zshrc reads it and cd's there.
+typeset -gx LC_REMOTE_PWD="$PWD"
+_lc_remote_pwd_sync() { export LC_REMOTE_PWD="$PWD" }
+autoload -Uz add-zsh-hook
+add-zsh-hook chpwd _lc_remote_pwd_sync
+
+# ── Node version manager (nvm) ─────────────────────────────────────────────
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ]         && source "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && source "$NVM_DIR/bash_completion"
+
+# ── pnpm ───────────────────────────────────────────────────────────────────
+{{ if eq .chezmoi.os "darwin" -}}
+export PNPM_HOME="$HOME/Library/pnpm"
+{{- else -}}
+export PNPM_HOME="$HOME/.local/share/pnpm"
+{{- end }}
+case ":$PATH:" in
+  *":$PNPM_HOME/bin:"*) ;;
+  *) export PATH="$PNPM_HOME/bin:$PATH" ;;
+esac
+
+# ── Prompt ─────────────────────────────────────────────────────────────────
+command -v starship >/dev/null 2>&1 && eval "$(starship init zsh)"
+
+# ── Editor ─────────────────────────────────────────────────────────────────
+if command -v zed >/dev/null 2>&1; then
+  export EDITOR="zed --wait"
+elif command -v code >/dev/null 2>&1; then
+  export EDITOR="code --wait"
+else
+  export EDITOR="vi"
+fi
+
+# ── Machine-local overrides ────────────────────────────────────────────────
+# Anything specific to this one machine (mount points, local SDK installs,
+# household-specific aliases) goes in ~/.zshrc.local. Not managed by chezmoi.
+[ -r "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"
