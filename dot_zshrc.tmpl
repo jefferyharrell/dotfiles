@@ -58,8 +58,17 @@ fi
 {{- end }}
 
 # ── SSH directory passthrough ──────────────────────────────────────────────
-# Keep LC_REMOTE_PWD in sync with $PWD so any outbound ssh forwards it via the
-# standard SendEnv LC_* rule. The remote's ~/.zshrc reads it and cd's there.
+# Two-way sync of $PWD across ssh hops. Outbound: keep LC_REMOTE_PWD aligned
+# with $PWD so ssh forwards it via the standard SendEnv LC_* rule. Inbound:
+# if an incoming session brought LC_REMOTE_PWD with it and that directory
+# exists here, cd there. Pondside paths sync via syncthing, so the same
+# path often exists on both ends.
+
+# Inbound: honor LC_REMOTE_PWD from the parent ssh session (must run BEFORE
+# the typeset below, or we'd overwrite the incoming value).
+[[ -n "$LC_REMOTE_PWD" && -d "$LC_REMOTE_PWD" ]] && cd "$LC_REMOTE_PWD"
+
+# Outbound: track $PWD for the next ssh out.
 typeset -gx LC_REMOTE_PWD="$PWD"
 _lc_remote_pwd_sync() { export LC_REMOTE_PWD="$PWD" }
 autoload -Uz add-zsh-hook
