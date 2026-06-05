@@ -82,22 +82,6 @@ _lc_remote_pwd_sync() { export LC_REMOTE_PWD="$PWD" }
 autoload -Uz add-zsh-hook
 add-zsh-hook chpwd _lc_remote_pwd_sync
 
-# ── Node version manager (nvm) ─────────────────────────────────────────────
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ]         && source "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && source "$NVM_DIR/bash_completion"
-
-# ── pnpm ───────────────────────────────────────────────────────────────────
-{{ if eq .chezmoi.os "darwin" -}}
-export PNPM_HOME="$HOME/Library/pnpm"
-{{- else -}}
-export PNPM_HOME="$HOME/.local/share/pnpm"
-{{- end }}
-case ":$PATH:" in
-  *":$PNPM_HOME/bin:"*) ;;
-  *) export PATH="$PNPM_HOME/bin:$PATH" ;;
-esac
-
 # ── Prompt ─────────────────────────────────────────────────────────────────
 command -v starship >/dev/null 2>&1 && eval "$(starship init zsh)"
 
