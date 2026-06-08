@@ -62,7 +62,7 @@
           "style": "diamond",
           "foreground": "p:fg",
           "background": "p:surface",
-          "template": " {{ .UserName }} ",
+          "template": " {{ .UserName }}{{ if .SSHSession }}@{{ .HostName }}{{ end }} ",
           "powerline_symbol": "\ue0b4",
           "trailing_diamond": "\ue0b4"
         }
