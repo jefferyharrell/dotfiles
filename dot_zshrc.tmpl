@@ -83,7 +83,10 @@ autoload -Uz add-zsh-hook
 add-zsh-hook chpwd _lc_remote_pwd_sync
 
 # ── Prompt ─────────────────────────────────────────────────────────────────
-command -v starship >/dev/null 2>&1 && eval "$(starship init zsh)"
+# oh-my-posh drives the prompt; theme lives in ~/.config/oh-my-posh/config.omp.json.
+# Guarded so a machine without oh-my-posh keeps whatever prompt it has.
+command -v oh-my-posh >/dev/null 2>&1 && \
+  eval "$(oh-my-posh init zsh --config "$HOME/.config/oh-my-posh/config.omp.json")"
 
 # ── Editor ─────────────────────────────────────────────────────────────────
 if command -v zed >/dev/null 2>&1; then
