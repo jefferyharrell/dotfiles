@@ -10,19 +10,6 @@ case ":$PATH:" in
   *) export PATH="$HOME/.local/bin:$PATH" ;;
 esac
 
-# ── Plugins ────────────────────────────────────────────────────────────────
-{{ if eq .chezmoi.os "darwin" -}}
-[ -r "$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh" ] && \
-  source "$(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh"
-{{- else if eq .chezmoi.os "linux" -}}
-for _f in \
-  /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh \
-  /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh; do
-  [ -r "$_f" ] && source "$_f" && break
-done
-unset _f
-{{- end }}
-
 # ── Modern Unix tool aliases ───────────────────────────────────────────────
 # Each guarded so missing tools don't break the shell.
 
@@ -101,3 +88,27 @@ fi
 # Anything specific to this one machine (mount points, local SDK installs,
 # household-specific aliases) goes in ~/.zshrc.local. Not managed by chezmoi.
 [ -r "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"
+
+# ── Command-line UX — KEEP THIS BLOCK LAST ───────────────────────────────────
+# zsh-syntax-highlighting must be sourced at the very end, and
+# zsh-autosuggestions must come AFTER it, or the two fight over redrawing the
+# input line. Both are guarded, so a machine missing a plugin just skips it.
+
+# The 'completion' suggest-strategy needs the completion system initialized.
+# Run compinit only if nothing already has (macOS/brew does it for us).
+(( $+functions[compdef] )) || { autoload -Uz compinit && compinit }
+
+# Suggest from history first, then tab-completion — so a machine with thin
+# shell history (e.g. a box you rarely log into) still offers something.
+ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+
+{{ if eq .chezmoi.os "darwin" -}}
+_zsh_share="$(brew --prefix)/share"
+{{- else if eq .chezmoi.os "linux" -}}
+_zsh_share="/usr/share"
+{{- end }}
+[ -r "$_zsh_share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ] && \
+  source "$_zsh_share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+[ -r "$_zsh_share/zsh-autosuggestions/zsh-autosuggestions.zsh" ] && \
+  source "$_zsh_share/zsh-autosuggestions/zsh-autosuggestions.zsh"
+unset _zsh_share
