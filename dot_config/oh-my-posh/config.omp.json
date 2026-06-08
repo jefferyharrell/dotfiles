@@ -61,6 +61,9 @@
           "type": "session",
           "style": "diamond",
           "foreground": "p:fg",
+          "foreground_templates": [
+            "{{ if .SSHSession }}p:clay{{ end }}"
+          ],
           "background": "p:surface",
           "template": " {{ .UserName }}{{ if .SSHSession }}@{{ .HostName }}{{ end }} ",
           "powerline_symbol": "\ue0b4",
